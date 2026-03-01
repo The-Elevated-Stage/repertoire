@@ -36,20 +36,44 @@ This example shows the complete format for a remaining plan produced after a con
 ## Complete Remaining Plan
 
 ```markdown
+---
+type: remaining-plan
+feature: "Background Sync"
+design-doc: "docs/specs/background-sync-design.md"
+supersedes: "background-sync-plan.md"
+tier: 2
+---
+
 # Implementation Plan: Background Sync (Revision 1)
 
 <!-- plan-index:start -->
 <!-- verified:2026-02-20T14:32:00 -->
 <!-- revision:1 -->
 <!-- supersedes:background-sync-plan.md -->
-<!-- phase:3 lines:38-112 title:"Real-Time Sync via WebSockets" -->
-<!-- conductor-review:3 lines:113-138 -->
-<!-- phase:4 lines:139-198 title:"Notification Integration" -->
-<!-- conductor-review:4 lines:199-220 -->
-<!-- phase:5 lines:221-267 title:"Settings & User Preferences" -->
-<!-- conductor-review:5 lines:268-285 -->
+<!-- overview lines:28-40 -->
+<!-- consultation-context lines:41-68 -->
+<!-- phase-summary lines:69-80 -->
+<!-- phase:3 lines:81-155 title:"Real-Time Sync via WebSockets" -->
+<!-- conductor-review:3 lines:156-181 -->
+<!-- phase:4 lines:182-241 title:"Notification Integration" -->
+<!-- conductor-review:4 lines:242-263 -->
+<!-- phase:5 lines:264-310 title:"Settings & User Preferences" -->
+<!-- conductor-review:5 lines:311-328 -->
 <!-- plan-index:end -->
 
+<sections>
+- overview
+- consultation-context
+- phase-summary
+- phase-3
+- conductor-review-3
+- phase-4
+- conductor-review-4
+- phase-5
+- conductor-review-5
+</sections>
+
+<section id="overview">
 <!-- overview -->
 ## Overview
 
@@ -63,8 +87,13 @@ signaling. This change was driven by FCM's incompatibility with the offline-firs
 architecture — FCM requires Google Play Services, which conflicts with the
 requirement that sync work without cloud dependencies (dramaturg-journal entry
 2026-02-15: "must work completely offline, cloud sync is a bonus not a requirement").
-<!-- /overview -->
 
+Readers operating under context budgets are encouraged to use self-compaction
+(e.g., `/lethe`) proactively between phases to preserve context quality.
+<!-- /overview -->
+</section>
+
+<section id="consultation-context">
 <!-- consultation-context -->
 ## Consultation Context
 
@@ -96,7 +125,9 @@ the signaling adapter needs replacement, not the sync logic.
 **Tasks added:**
 - Task 3.5 (WebSocket Connection Manager) `(NEW)` — connection lifecycle, reconnection, heartbeat
 <!-- /consultation-context -->
+</section>
 
+<section id="phase-summary">
 <!-- phase-summary -->
 ## Phase Summary
 
@@ -109,9 +140,18 @@ the signaling adapter needs replacement, not the sync logic.
 Phases execute sequentially. Phase 3 begins with a rollback task to remove FCM
 scaffolding before new WebSocket work starts.
 <!-- /phase-summary -->
+</section>
 
+<section id="phase-3">
 <!-- phase:3 -->
 ## Phase 3: Real-Time Sync via WebSockets
+
+<mandatory>
+The WebSocket adapter must implement the existing `SyncSignalAdapter` interface
+without modifications to the interface contract. Offline-first behavior is
+non-negotiable — the adapter reports disconnected state and the sync engine falls
+back to local-only mode.
+</mandatory>
 
 **Objective:** Replace the FCM signaling layer with a WebSocket-based approach that
 operates without platform service dependencies.
@@ -176,8 +216,16 @@ graceful shutdown during app lifecycle events.
 
 **Files:** `lib/services/sync/ws_connection_manager.dart`
 **Tests:** Unit tests for connection pooling, token refresh flow, app lifecycle hooks
-<!-- /phase:3 -->
 
+<guidance>
+Consider using `web_socket_channel` package for WebSocket support — verified as
+actively maintained and cross-platform compatible. Alternative packages are
+acceptable if they provide equivalent reliability.
+</guidance>
+<!-- /phase:3 -->
+</section>
+
+<section id="conductor-review-3">
 <!-- conductor-review:3 -->
 ## Conductor Review: Post-Phase 3
 
@@ -188,8 +236,11 @@ graceful shutdown during app lifecycle events.
 - [ ] Offline fallback works — kill WebSocket server, verify local-only sync continues
 - [ ] Integration: sync engine uses WebSocket adapter transparently (swap test)
 - [ ] No regressions in Phase 1-2 test suites
+- [ ] Run context compaction (lethe) before proceeding to next phase
 <!-- /conductor-review:3 -->
+</section>
 
+<section id="phase-4">
 <!-- phase:4 -->
 ## Phase 4: Notification Integration
 
@@ -224,7 +275,9 @@ Badge count on settings icon when sync is paused.
 **Files:** `lib/widgets/sync/`, `lib/screens/sync_status_screen.dart`
 **Tests:** Widget tests for banner display logic, badge count updates
 <!-- /phase:4 -->
+</section>
 
+<section id="conductor-review-4">
 <!-- conductor-review:4 -->
 ## Conductor Review: Post-Phase 4
 
@@ -233,8 +286,11 @@ Badge count on settings icon when sync is paused.
 - [ ] No notifications during normal connected operation (silent path)
 - [ ] Battery impact: notification service does not keep CPU awake
 - [ ] Integration: end-to-end from WebSocket disconnect → notification → reconnect → dismiss
+- [ ] Run context compaction (lethe) before proceeding to next phase
 <!-- /conductor-review:4 -->
+</section>
 
+<section id="phase-5">
 <!-- phase:5 -->
 ## Phase 5: Settings & User Preferences
 
@@ -264,7 +320,9 @@ Notification settings within the sync settings screen:
 **Files:** `lib/screens/settings/notification_prefs_section.dart`
 **Tests:** Widget tests for quiet hours logic, preference persistence
 <!-- /phase:5 -->
+</section>
 
+<section id="conductor-review-5">
 <!-- conductor-review:5 -->
 ## Conductor Review: Post-Phase 5
 
@@ -273,7 +331,9 @@ Notification settings within the sync settings screen:
 - [ ] Wi-Fi only toggle tested with mobile data simulation
 - [ ] Quiet hours respected — no notifications during configured window
 - [ ] Full regression: Phases 1-5 integration test suite passes
+- [ ] Run context compaction (lethe) before proceeding to next phase
 <!-- /conductor-review:5 -->
+</section>
 ```
 </core>
 </section>
@@ -284,7 +344,17 @@ Notification settings within the sync settings screen:
 
 Key formatting conventions demonstrated in this example:
 
-**Plan index:** Revision metadata (`revision:1`, `supersedes:`) appears only in remaining plans. The `verified` timestamp confirms the verification loop passed. Line ranges must be accurate after all edits — the index is generated last.
+**YAML frontmatter:** The `type: remaining-plan` field distinguishes from original plans (`type: implementation-plan`). The `supersedes` field identifies the replaced plan. The `tier: 2` field declares the document format version.
+
+**Sections index:** The `<sections>` block after the plan-index lists all section IDs in the document. Consumers can verify that every listed ID has a corresponding `<section>` tag.
+
+**Section tags:** Each major section is wrapped in `<section id="...">` tags coexisting with sentinel markers. Sentinels remain primary navigation; section tags provide structural validation and fallback.
+
+**Authority tags:** Phase 3 demonstrates `<mandatory>` (offline-first constraint, interface contract) and `<guidance>` (package recommendation) within a phase section. These signal constraint weight to the Conductor and Copyist.
+
+**Plan index:** Revision metadata (`revision:1`, `supersedes:`) appears only in remaining plans. The `verified` timestamp confirms the verification loop passed. Line ranges must be accurate after all edits — the index is generated last. Overview, consultation-context, and phase-summary entries are included alongside phase entries.
+
+**Context management:** The overview includes a self-compaction recommendation. Conductor-review sections include a lethe compaction item by default (all three phases include it in this example).
 
 **Consultation context:** Unique to remaining plans. Covers the blocker, what was tried, what changed, and what journal constraints influenced the decision. The Conductor reads this instead of the full consultation journal.
 

@@ -2,7 +2,7 @@
 
 <metadata>
 type: shared-reference
-consumers: arranger, repetiteur
+consumers: arranger, repetiteur, dramaturg
 tier: 3
 </metadata>
 
@@ -11,6 +11,7 @@ tier: 3
 - location-and-naming
 - format
 - entry-categories
+- dramaturg-entry-types
 - checkpoint-triggers
 - journal-types
 - lifecycle
@@ -72,15 +73,23 @@ For example: `# Consultation 1 Journal: Background Sync Implementation`
 **Alternatives considered:** [What was rejected and why]
 **Impact:** [What this affects in the plan]
 **External input:** [What the Conductor/user said, if consulted on this point]
+**Strength:** [mandatory | core | context]
 
 ---
 ```
+
+The **Strength** field indicates constraint weight for downstream consumers:
+- `mandatory` — user overrides, non-negotiable constraints. Highest constraint weight. Violations are always errors.
+- `core` — standard decisions with rationale. Normal constraint weight. Binding but revisable with justification.
+- `context` — informational, alternatives explored. Lowest constraint weight, informational only. Does not produce constraint violations.
+
+Downstream consumers (particularly the Repetiteur's journal analysis) use the Strength field to calibrate constraint extraction. A `mandatory` entry produces an inviolable constraint; a `core` entry produces a binding-but-revisable constraint; a `context` entry is informational and does not constrain resolution.
 
 Fields are flexible — not every entry needs every field. The mandatory fields are:
 - **Finding/Decision** — what happened
 - **Rationale** — why
 
-Other fields are included when applicable. Brevity is fine for straightforward decisions; thoroughness is required for decisions that future sessions might question.
+Other fields are included when applicable. The **Strength** field should be included for any entry that records a decision or constraint — it may be omitted for purely informational entries where `context` is the obvious default. Brevity is fine for straightforward decisions; thoroughness is required for decisions that future sessions might question.
 </core>
 </section>
 
@@ -105,8 +114,61 @@ Capture discovered limitations, platform behaviors, or non-negotiable requiremen
 - "Android limits WiFi scans to 30-minute intervals"
 - "SQLite WAL mode required for concurrent access"
 
-The category is implicit in the entry content — there is no explicit category field. The journal analysis subagent infers category from context when processing entries.
+For most journals, the category is implicit in the entry content — the journal analysis subagent infers category from context when processing entries. Dramaturg journals use an explicit `Category` field (see dramaturg-entry-types section). Goal/use-case entries are inviolable constraints regardless of the `Strength` field — they represent user intent at the vision level.
 </core>
+</section>
+
+<section id="dramaturg-entry-types">
+<context>
+## Dramaturg Entry Types
+
+Dramaturg journals use three distinct entry types with field names that differ from the standard entry template. Both conventions are valid — downstream consumers must handle both.
+
+### Decision Entries
+
+```markdown
+## [Topic]
+
+**Category:** [goal | use-case | decision | constraint]
+**Decided:** [What was decided]
+**User verbatim:** [The user's exact words, quoted]
+**User context:** [What the user meant, interpreted by the Dramaturg]
+**Alternatives discussed:** [Options explored with the user]
+**Arranger note:** [VERIFIED | PARTIAL | UNRESEARCHED]
+**Status:** [decided | revised | deferred]
+**Strength:** [mandatory | core | context]
+```
+
+### Research Entries
+
+```markdown
+## [Topic]
+
+**Question:** [What needed investigation]
+**Tools used:** [Gemini, web search, etc.]
+**Findings:** [What was found]
+**Decision:** [What was decided based on findings]
+**Arranger note:** [VERIFIED | PARTIAL | UNRESEARCHED]
+**Status:** [decided | revised]
+**Strength:** [mandatory | core | context]
+```
+
+### Tension Entries
+
+```markdown
+## [Topic]
+
+**Requirements in tension:** [Which requirements conflict]
+**Why they conflict:** [The nature of the conflict]
+**Current resolution approach:** [How the tension is being managed]
+**Status:** acknowledged
+**Strength:** [mandatory | core | context]
+```
+
+Entries with `Arranger note: UNRESEARCHED` indicate decisions made without research backing — downstream consumers should treat these as lower-confidence decisions and consider independent verification during planning or resolution.
+
+Entries with `Category: goal` or `Category: use-case` are inviolable constraints — treat equivalent to `Strength: mandatory` regardless of the explicit Strength value.
+</context>
 </section>
 
 <section id="checkpoint-triggers">
@@ -160,6 +222,7 @@ These contain the user's actual words and explicit decisions. They are the prima
 - Decisions are **binding** — no session can override them without user escalation
 - The "why" behind each decision is the constraint, not the specific choice
 - A future Repetiteur or Arranger session must respect these constraints
+- Dramaturg journals may contain `UNRESEARCHED` entries — items decided without research backing. These should be treated as lower-confidence decisions; downstream planners may verify them independently while still respecting the user's stated preference
 
 ### Autonomous Journals (Consultation)
 These contain autonomous reasoning and decisions from the consultation session. They are context, not constraints.
@@ -176,7 +239,7 @@ These contain autonomous reasoning and decisions from the consultation session. 
 <core>
 ## Lifecycle
 
-1. **Created** at the start of the session (Arranger Phase 1, Repetiteur Stage 1)
+1. **Created** at the start of the session (Dramaturg research session, Arranger Phase 1, Repetiteur Stage 1)
 2. **Appended to** throughout all phases/stages at defined checkpoint triggers
 3. **Committed** alongside the plan during finalization/handoff
 4. **Persists** after the session — NOT deleted or archived. Remains available for future sessions and user review.

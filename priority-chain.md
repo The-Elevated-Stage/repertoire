@@ -2,7 +2,7 @@
 
 <metadata>
 type: shared-reference
-consumers: arranger, repetiteur
+consumers: arranger, repetiteur, conductor, dramaturg
 tier: 3
 </metadata>
 

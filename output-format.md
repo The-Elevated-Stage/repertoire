@@ -2,7 +2,7 @@
 
 <metadata>
 type: shared-reference
-consumers: arranger, repetiteur
+consumers: arranger, repetiteur, conductor, copyist
 tier: 3
 </metadata>
 
@@ -14,8 +14,10 @@ tier: 3
 - phase-sections
 - conductor-review-sections
 - sentinel-markers
+- authority-tags
 - self-containment-rules
 - task-annotation-markers
+- context-management-guidance
 - file-location
 - naming-convention
 - rollback-tasks
@@ -34,17 +36,38 @@ The template serves two consumers with different reading patterns. The Conductor
 </context>
 
 ```markdown
+---
+type: implementation-plan           # or: remaining-plan
+feature: "[Feature Name]"
+design-doc: "docs/specs/{feature}-design.md"
+supersedes: "{feature}-plan-r{N-1}.md"  # remaining-plan only
+tier: 2
+---
+
 # Implementation Plan: [Feature Name] (Revision [N])  <!-- remaining-plan only: revision suffix -->
 
 <!-- plan-index:start -->
 <!-- verified:YYYY-MM-DDTHH:MM:SS -->
 <!-- revision:N -->                          <!-- remaining-plan only -->
 <!-- supersedes:{feature}-plan-r{N-1}.md --> <!-- remaining-plan only -->
+<!-- overview lines:NN-NN -->
+<!-- consultation-context lines:NN-NN -->    <!-- remaining-plan only -->
+<!-- phase-summary lines:NN-NN -->
 <!-- phase:N lines:NN-NN title:"[Phase Title]" -->
 <!-- conductor-review:N lines:NN-NN -->
 ...
 <!-- plan-index:end -->
 
+<sections>
+- overview
+- consultation-context
+- phase-summary
+- phase-N
+- conductor-review-N
+...
+</sections>
+
+<section id="overview">
 <!-- overview -->
 ## Overview
 [What remains to be built, current state of implementation.
@@ -52,29 +75,41 @@ The template serves two consumers with different reading patterns. The Conductor
  and no longer referenced by any downstream consumer. All relevant
  context from prior plans must be carried forward here.]
 <!-- /overview -->
+</section>
 
-<!-- consultation-context -->        ← Remaining plans only
+<section id="consultation-context">      ← Remaining plans only
+<!-- consultation-context -->
 ## Consultation Context
 [What changed and why]
 <!-- /consultation-context -->
+</section>
 
+<section id="phase-summary">
 <!-- phase-summary -->
 ## Phase Summary
 [Phase map, dependencies, parallelization]
 <!-- /phase-summary -->
+</section>
 
+<section id="phase-N">
 <!-- phase:N -->
 ## Phase N: [Phase Title]
 [Self-contained implementation detail]
 <!-- /phase:N -->
+</section>
 
+<section id="conductor-review-N">
 <!-- conductor-review:N -->
 ## Conductor Review: Post-Phase N
 [Review checklist]
 <!-- /conductor-review:N -->
+</section>
 
 ...repeat for all phases...
 ```
+After the plan-index, plans include a `<sections>` index listing all section IDs in the document. This is a Tier 2 structural element providing fallback navigation alongside the sentinel/plan-index system. The `<sections>` index enables structural validation — consumers can verify that every listed section ID has a corresponding `<section>` tag in the document.
+
+Each phase and conductor-review section is wrapped in `<section id="...">` tags coexisting with sentinel markers. Sentinels remain the primary navigation mechanism; `<section>` tags provide structural validation and fallback for consumers that parse XML-style boundaries. The `id` attribute matches the sentinel marker name (e.g., `<section id="phase-3">` wraps `<!-- phase:3 -->` content).
 </core>
 </section>
 
@@ -87,6 +122,8 @@ The plan-index block at the top of the file serves as both a table of contents a
 ```markdown
 <!-- plan-index:start -->
 <!-- verified:YYYY-MM-DDTHH:MM:SS -->
+<!-- overview lines:15-30 -->
+<!-- phase-summary lines:31-44 -->
 <!-- phase:3 lines:45-120 title:"Background Service Architecture" -->
 <!-- conductor-review:3 lines:121-145 -->
 <!-- phase:4 lines:146-230 title:"Notification Integration" -->
@@ -163,6 +200,14 @@ Phase sections contain all implementation detail for the Copyist to produce task
 **For remaining plans:** Original phase numbers are preserved. If the remaining plan covers Phases 3-6, it uses Phase 3, 4, 5, 6 — not Phase 1, 2, 3, 4. This preserves the Conductor's mental model and provides natural correspondence with the superseded plan.
 
 **For remaining plans:** Completed, unaffected phases are not included — they exist in the superseded plan for reference only.
+
+**Danger file annotations:** When a file is modified by multiple phases, annotate it inline to alert the Conductor and Copyist to shared-file coordination concerns:
+
+```markdown
+<!-- danger-file: path/to/file shared-with="phase:N" -->
+```
+
+**Original vs. remaining plan content distinction:** Original plans (from the Arranger) contain phase-level content without task-level headers — the Copyist decomposes phases into tasks. Remaining plans (from the Repetiteur) contain task-level content with annotation markers (`(REVISED)`, `(NEW)`, `(REMOVED)`) because the Conductor needs to match tasks against the superseded plan's task state.
 </core>
 </section>
 
@@ -180,6 +225,16 @@ Each phase is followed by its Conductor review section:
 ```
 
 Review sections contain the Conductor's verification checklist for that phase — what to check, what integration surfaces to verify, what test suites to run. For remaining plans, review sections include any rollback verification items, corrective task validation, and cross-phase integration checks specific to the revised approach.
+
+<guidance>
+Conductor-review sections should by default include a context management checkpoint:
+
+```markdown
+- [ ] Run context compaction (lethe) before proceeding to next phase
+```
+
+Exception: trivially small phases (e.g., git repo setup, initial project scaffolding, single-file config changes) where accumulated context is negligible. For these, the compaction item may be omitted. The purpose is to ensure the Conductor and Musicians maintain context quality across phase boundaries, not to add ceremony to trivial work.
+</guidance>
 </core>
 </section>
 
@@ -199,6 +254,22 @@ Sentinel markers use HTML comment syntax for machine readability without affecti
 | `<!-- conductor-review:N -->` / `<!-- /conductor-review:N -->` | Review section bounds |
 
 Every sentinel marker must have a matching close marker. Header-sentinel consistency — the phase title in the sentinel must match the markdown header inside the section.
+</core>
+</section>
+
+<section id="authority-tags">
+<core>
+## Authority Tags
+
+Implementation plans use Tier 2 hybrid document structure with authority tags to signal constraint weight within phase sections:
+
+| Tag | Meaning | Downstream Treatment |
+|-----|---------|---------------------|
+| `<mandatory>` | Non-negotiable constraints. Not modifiable by the Conductor. Preserved verbatim by the Copyist. | Blocking gate — violations are always errors. |
+| `<guidance>` | Recommendations and best practices. The Conductor can adapt these based on execution context. The Copyist can rephrase for clarity. | In conductor-review, these are suggestions not blocking gates. |
+| `<core>` | Primary implementation content. The default tag for phase body content. | Standard implementation content — no special constraint weight. |
+
+Only these three authority tags are permitted — no invented tags. Tags must be well-formed (matching open/close pairs). Authority tags within phase sections coexist with sentinel markers and `<section>` tags — they are complementary, not competing, structural elements.
 </core>
 </section>
 
@@ -249,6 +320,18 @@ When the remaining plan includes tasks that correspond to tasks in the supersede
 - No task can silently disappear
 - `(REMOVED)` tasks are not included in phase sections — they are listed in the Consultation Context with an explanation
 </core>
+</section>
+
+<section id="context-management-guidance">
+<guidance>
+## Context Management Guidance
+
+Plans are consumed by agents (Conductor, Musicians) operating under context budgets. Context exhaustion during implementation degrades decision quality and risks plan misinterpretation.
+
+Readers are permitted and encouraged to use available self-compaction methods (e.g., `/lethe`, `/compact`) proactively between major work units to preserve context quality. Compaction is most valuable at phase boundaries, after completing large task groups, and before reading new phase sections.
+
+This is a recommendation, not a mandate — readers should use judgement based on their context consumption trajectory. The plan format acknowledges context as a concern for consumers and structures itself (sentinel markers, plan-index line ranges, selective reading) to minimize unnecessary context consumption.
+</guidance>
 </section>
 
 <section id="file-location">

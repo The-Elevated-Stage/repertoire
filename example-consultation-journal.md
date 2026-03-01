@@ -43,6 +43,7 @@ contradicts the user's core constraint.
 **Impact:** This is not a Task 3.2 bug — it is an architectural incompatibility
 between FCM and the offline-first requirement. Resolution requires replacing the
 signaling approach, not fixing the FCM integration.
+**Strength:** core
 
 ---
 
@@ -62,6 +63,7 @@ path):
 **Rationale:** Constraint #1 is the binding one. It was expressed as a core value
 ("the app's value proposition"), not a technical preference. Constraint #2 is
 explicitly a preference ("prefer") and does not override #1.
+**Strength:** mandatory
 
 ---
 
@@ -85,6 +87,7 @@ can change"). This containment worked — only the concrete adapter and its dire
 consumers are affected.
 **Impact:** Resolution scope is moderate: one task replaced, two tasks revised,
 one task removed, one task added, one phase adjusted. Phases 1, 2, and 5 survive.
+**Strength:** core
 
 ---
 
@@ -100,6 +103,7 @@ trigger vs. WebSocket `connectionState` stream → notification trigger. Differe
 event model, different state mapping.
 **Alternatives considered:** Keep FCM for notifications only (hybrid) — rejected
 because it reintroduces the Google Play Services dependency.
+**Strength:** core
 
 ---
 
@@ -118,6 +122,7 @@ connection vs. repeated HTTP requests).
 **External input:** Gemini search confirmed `web_socket_channel` package is
 actively maintained, supports all target platforms, and handles reconnection
 patterns well.
+**Strength:** core
 
 ---
 
@@ -132,6 +137,7 @@ constraints.
 - Constraint #3 (WAL mode): unaffected
 **Rationale:** No conflicts found. The journal analysis subagent (research path)
 confirmed no entry contradicts WebSocket adoption.
+**Strength:** context
 
 ---
 
@@ -143,6 +149,7 @@ Connection manager (new Task 3.5) is self-contained.
 **Rationale:** Traced the WebSocket adapter's integration surfaces — it implements
 the same interface, produces the same event types (connected, disconnected,
 message received), and stores no additional state beyond connection handle.
+**Strength:** context
 
 ---
 
@@ -154,6 +161,7 @@ interface, it doesn't know or care what transport the adapter uses."
 **Rationale:** Validates that replacing the adapter does not require changes to
 the service lifecycle.
 **External input:** Conductor response via repetiteur_conversation table.
+**Strength:** context
 
 ---
 
@@ -166,6 +174,7 @@ is no path from FCM adapter code to WebSocket adapter code that would be shorter
 than starting fresh. Default to rollback per mandatory rules.
 **Alternatives considered:** Refactor FCM adapter into WebSocket adapter (rejected
 — different protocol model, no reusable code).
+**Strength:** core
 
 ---
 
@@ -177,6 +186,7 @@ The task said "subscribe to connection state" but did not define what states
 produce what notifications.
 **Rationale:** This would leave the Copyist guessing about notification behavior.
 **Impact:** Added explicit state mapping table to Task 4.1.
+**Strength:** core
 
 ---
 
@@ -185,6 +195,7 @@ produce what notifications.
 **Finding/Decision:** Pass 2 (narrowed scope — only Task 4.1 correction) confirmed
 the state mapping is complete and internally consistent. No new issues found.
 **Rationale:** Pass 2 scope was correctly narrowed to the single corrected task.
+**Strength:** context
 
 ---
 
@@ -195,6 +206,7 @@ WebSockets. One rollback task, two revised tasks, one removed task, one new task
 Phase 4 adjusted for WebSocket event model. Phase 5 unchanged.
 **Rationale:** All journal constraints satisfied. Impact contained by the
 transport-agnostic interface. Verification loop passed (2 passes).
+**Strength:** core
 ```
 </core>
 </section>
@@ -205,7 +217,7 @@ transport-agnostic interface. Verification loop passed (2 passes).
 
 Key conventions demonstrated in this example:
 
-**Entry structure:** Every entry has Finding/Decision and Rationale (mandatory). Alternatives considered, Impact, and External input appear when applicable.
+**Entry structure:** Every entry has Finding/Decision and Rationale (mandatory). Alternatives considered, Impact, External input, and Strength appear when applicable.
 
 **Stage progression:** Entries are organized by stage (1-4) and topic. Multiple entries per stage are normal — Stage 3 (Resolution) typically has the most entries because each decision point gets its own entry.
 
@@ -218,6 +230,8 @@ Key conventions demonstrated in this example:
 **Append-only:** Entries are never edited or removed. If a decision is revised later in the consultation, a new entry records the revision with a reference to the original decision.
 
 **Scope surprise:** The "broader than expected" entry in Stage 2 shows how to document scope discovery. The impact map was updated — the journal records both the finding and the map adjustment.
+
+**Strength field:** Each entry includes a `Strength` annotation. The constraint extraction entry is `mandatory` (captures inviolable user constraints). Most analytical and resolution entries are `core` (standard decisions with rationale). Validation and confirmation entries are `context` (informational, no constraint weight). Downstream consumers use Strength to calibrate constraint extraction — `mandatory` violations are always errors, `core` violations require investigation, `context` items are informational only.
 </context>
 </section>
 

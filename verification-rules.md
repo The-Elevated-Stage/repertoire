@@ -158,7 +158,14 @@ In addition to the content-focused checks above, every plan must pass structural
 - **Header-sentinel consistency** — section headers match their enclosing sentinel markers. A sentinel labeled `phase-3` wraps content that is actually Phase 3.
 - **Verification index accuracy** — the `plan-index` at the top of the file correctly references every phase section with accurate line ranges. Line ranges must match the actual content positions after all edits.
 
-The canonical definitions for what these structural elements look like (sentinel syntax, index schema, marker format) are in `score-preparation/output-format.md`. This section defines **what to check**; output-format.md defines **what correct looks like**.
+The canonical definitions for what these structural elements look like (sentinel syntax, index schema, marker format) are in `repertoire/output-format.md`. This section defines **what to check**; output-format.md defines **what correct looks like**.
+
+**Tier 2 structural verification items:**
+
+- YAML frontmatter present and well-formed (valid `type`, `feature`, `tier: 2` fields)
+- `<sections>` index present and complete (lists all section IDs in the document)
+- `<section>` tags present with matching `id` attributes, corresponding to sentinel markers
+- Authority tags well-formed (`<mandatory>`, `<guidance>`, `<core>` only — no invented tags, matching open/close pairs)
 </core>
 </section>
 
