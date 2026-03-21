@@ -37,9 +37,11 @@ This example shows the complete format for a remaining plan produced after a con
 
 ```markdown
 ---
+title: "Background Sync Implementation Plan"
+date: 2026-02-20
 type: remaining-plan
 feature: "Background Sync"
-design-doc: "docs/specs/background-sync-design.md"
+design-doc: "docs/plans/designs/background-sync-design.md"
 supersedes: "background-sync-plan.md"
 tier: 2
 ---
@@ -73,8 +75,8 @@ tier: 2
 - conductor-review-5
 </sections>
 
-<section id="overview">
 <!-- overview -->
+<section id="overview">
 ## Overview
 
 This remaining plan covers Phases 3-5 of the background sync feature. Phases 1-2
@@ -90,11 +92,11 @@ requirement that sync work without cloud dependencies (dramaturg-journal entry
 
 Readers operating under context budgets are encouraged to use self-compaction
 (e.g., `/lethe`) proactively between phases to preserve context quality.
-<!-- /overview -->
 </section>
+<!-- /overview -->
 
-<section id="consultation-context">
 <!-- consultation-context -->
+<section id="consultation-context">
 ## Consultation Context
 
 **Blocker:** Task 3.2 (FCM Integration) failed — FCM SDK initialization crashes
@@ -124,11 +126,11 @@ the signaling adapter needs replacement, not the sync logic.
 
 **Tasks added:**
 - Task 3.5 (WebSocket Connection Manager) `(NEW)` — connection lifecycle, reconnection, heartbeat
-<!-- /consultation-context -->
 </section>
+<!-- /consultation-context -->
 
-<section id="phase-summary">
 <!-- phase-summary -->
+<section id="phase-summary">
 ## Phase Summary
 
 | Phase | Title | Status | Dependencies |
@@ -139,11 +141,11 @@ the signaling adapter needs replacement, not the sync logic.
 
 Phases execute sequentially. Phase 3 begins with a rollback task to remove FCM
 scaffolding before new WebSocket work starts.
-<!-- /phase-summary -->
 </section>
+<!-- /phase-summary -->
 
-<section id="phase-3">
 <!-- phase:3 -->
+<section id="phase-3">
 ## Phase 3: Real-Time Sync via WebSockets
 
 <mandatory>
@@ -222,11 +224,11 @@ Consider using `web_socket_channel` package for WebSocket support — verified a
 actively maintained and cross-platform compatible. Alternative packages are
 acceptable if they provide equivalent reliability.
 </guidance>
-<!-- /phase:3 -->
 </section>
+<!-- /phase:3 -->
 
-<section id="conductor-review-3">
 <!-- conductor-review:3 -->
+<section id="conductor-review-3">
 ## Conductor Review: Post-Phase 3
 
 - [ ] Rollback verification: no FCM imports remain (`grep -r "firebase_messaging"`)
@@ -237,11 +239,11 @@ acceptable if they provide equivalent reliability.
 - [ ] Integration: sync engine uses WebSocket adapter transparently (swap test)
 - [ ] No regressions in Phase 1-2 test suites
 - [ ] Run context compaction (lethe) before proceeding to next phase
-<!-- /conductor-review:3 -->
 </section>
+<!-- /conductor-review:3 -->
 
-<section id="phase-4">
 <!-- phase:4 -->
+<section id="phase-4">
 ## Phase 4: Notification Integration
 
 **Objective:** Integrate local notifications with sync events to surface sync
@@ -274,11 +276,11 @@ Badge count on settings icon when sync is paused.
 
 **Files:** `lib/widgets/sync/`, `lib/screens/sync_status_screen.dart`
 **Tests:** Widget tests for banner display logic, badge count updates
-<!-- /phase:4 -->
 </section>
+<!-- /phase:4 -->
 
-<section id="conductor-review-4">
 <!-- conductor-review:4 -->
+<section id="conductor-review-4">
 ## Conductor Review: Post-Phase 4
 
 - [ ] Notifications display correctly for each connection state
@@ -287,11 +289,11 @@ Badge count on settings icon when sync is paused.
 - [ ] Battery impact: notification service does not keep CPU awake
 - [ ] Integration: end-to-end from WebSocket disconnect → notification → reconnect → dismiss
 - [ ] Run context compaction (lethe) before proceeding to next phase
-<!-- /conductor-review:4 -->
 </section>
+<!-- /conductor-review:4 -->
 
-<section id="phase-5">
 <!-- phase:5 -->
+<section id="phase-5">
 ## Phase 5: Settings & User Preferences
 
 **Objective:** Add user-facing settings for sync behavior and notification preferences.
@@ -319,11 +321,11 @@ Notification settings within the sync settings screen:
 
 **Files:** `lib/screens/settings/notification_prefs_section.dart`
 **Tests:** Widget tests for quiet hours logic, preference persistence
-<!-- /phase:5 -->
 </section>
+<!-- /phase:5 -->
 
-<section id="conductor-review-5">
 <!-- conductor-review:5 -->
+<section id="conductor-review-5">
 ## Conductor Review: Post-Phase 5
 
 - [ ] All settings persist across app restart
@@ -332,8 +334,8 @@ Notification settings within the sync settings screen:
 - [ ] Quiet hours respected — no notifications during configured window
 - [ ] Full regression: Phases 1-5 integration test suite passes
 - [ ] Run context compaction (lethe) before proceeding to next phase
-<!-- /conductor-review:5 -->
 </section>
+<!-- /conductor-review:5 -->
 ```
 </core>
 </section>
@@ -348,7 +350,7 @@ Key formatting conventions demonstrated in this example:
 
 **Sections index:** The `<sections>` block after the plan-index lists all section IDs in the document. Consumers can verify that every listed ID has a corresponding `<section>` tag.
 
-**Section tags:** Each major section is wrapped in `<section id="...">` tags coexisting with sentinel markers. Sentinels remain primary navigation; section tags provide structural validation and fallback.
+**Section tags:** Each major section uses sentinel markers on the outside with `<section id="...">` tags nested inside. Sentinels are the outermost boundary and primary navigation mechanism; section tags provide structural validation and fallback.
 
 **Authority tags:** Phase 3 demonstrates `<mandatory>` (offline-first constraint, interface contract) and `<guidance>` (package recommendation) within a phase section. These signal constraint weight to the Conductor and Copyist.
 

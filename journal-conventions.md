@@ -2,7 +2,8 @@
 
 <metadata>
 type: shared-reference
-consumers: arranger, repetiteur, dramaturg
+consumers: arranger, repetiteur
+producers: dramaturg, arranger, repetiteur
 tier: 3
 </metadata>
 
@@ -59,9 +60,16 @@ Append-only markdown files. Entries are categorized and sequential. Entries are 
 
 ### Document Title Convention
 
-Journal documents use the title format: `# Consultation N Journal: {Feature Name}`
+Each journal type uses its own title format:
 
-For example: `# Consultation 1 Journal: Background Sync Implementation`
+- **Arranger journal:** `# Arranger Journal: {Feature Name}`
+- **Dramaturg journal:** `# Dramaturg Journal: {Feature Name}`
+- **Consultation journal:** `# Consultation N Journal: {Feature Name}`
+
+For example:
+- `# Arranger Journal: Background Sync Implementation`
+- `# Dramaturg Journal: Background Sync Implementation`
+- `# Consultation 1 Journal: Background Sync Implementation`
 
 ### Entry Template
 
@@ -178,11 +186,39 @@ Entries with `Category: goal` or `Category: use-case` are inviolable constraints
 Journals are written at defined trigger points, not ad-hoc. Each trigger represents a moment where significant state should be persisted.
 
 ### Arranger Checkpoint Triggers
-- After each research phase decision
+
+**Phase 1 — Ingestion & Overview:**
+- After journal distillation subagent returns findings
+- After design document completeness assessment
+- After overview presentation and user acknowledgment
+
+**Phase 2 — Feasibility Audit:**
+- After each research finding or feasibility decision
 - After user approval/override at each gate
-- After feasibility findings
-- After each phase section is completed
-- At finalization
+- After feasibility audit findings that affect scope or approach
+
+**Phase 3 — Implementation Discussion:**
+- After each settled decision
+- After user overrides (with `Strength: mandatory`)
+- After mental implementation findings
+- After decision inventory checkpoint confirmation
+
+**Phase 4 — Phase Structuring:**
+- After phase boundary decisions (what goes in which phase)
+- After dependency ordering is determined
+- After parallelization decisions
+- After danger file identification
+
+**Phase 5 — Section Writing & Review:**
+- After each phase section is completed and reviewed
+- After self-containment review findings
+- After integration point decisions between phases
+- After Phase Summary review
+
+**Phase 6 — Finalization & Commit:**
+- After each verification pass and any corrections applied
+- At finalization (plan-index generation, final state)
+- After commit (verification passed, plan committed)
 
 ### Repetiteur Checkpoint Triggers
 
@@ -242,7 +278,7 @@ These contain autonomous reasoning and decisions from the consultation session. 
 1. **Created** at the start of the session (Dramaturg research session, Arranger Phase 1, Repetiteur Stage 1)
 2. **Appended to** throughout all phases/stages at defined checkpoint triggers
 3. **Committed** alongside the plan during finalization/handoff
-4. **Persists** after the session — NOT deleted or archived. Remains available for future sessions and user review.
+4. **Persists** after the session — NOT deleted or archived. Remains available for future sessions and user review. For the Arranger, the journal also serves as the state-transfer mechanism across the Phase 4/5 session split — when a session boundary falls between verification and handoff, the incoming session reads the journal to recover progress state.
 5. **Cleaned up** by the Conductor after the full feature implementation is complete, along with the rest of the decisions directory
 </core>
 </section>

@@ -2,7 +2,7 @@
 
 <metadata>
 type: shared-reference
-consumers: arranger, repetiteur
+consumers: arranger, repetiteur, conductor
 tier: 3
 </metadata>
 
@@ -23,7 +23,7 @@ tier: 3
 
 These categories **must always** be verified through Gemini or web search, never assumed from training data. No exceptions, regardless of confidence level.
 
-### Android and Cross-Device Services/Settings/Usage Patterns
+### Platform-Specific Services/Settings/Usage Patterns
 
 Platform APIs change with OS versions. A setting that worked on Android 13 may be deprecated or restricted on Android 14. Training data is unreliable for version-specific behavior.
 
@@ -78,7 +78,7 @@ Write a pseudo-implementation of a critical integration point and send it to Gem
 
 ### Cross-Component Dependency Checks
 
-When Task A will modify a file that Task B also depends on, verify the integration contract. Will Task A's changes break Task B's assumptions? These findings feed directly into Conductor checkpoint sections as explicit verification items.
+When Task A will modify a file that Task B also depends on, verify the integration contract. Will Task A's changes break Task B's assumptions? These findings feed directly into downstream checkpoint sections as explicit verification items.
 
 ### When Mental Implementation Is NOT Needed
 
@@ -143,6 +143,7 @@ Before any approach enters the plan, confirm:
 - [ ] Cross-component interactions stress-tested via mental implementation (read-only subagents)
 - [ ] Mocked analysis for critical integration points sent to Gemini for review
 - [ ] Any research conflicts resolved using truth hierarchy
+- [ ] Phase sections pass the Copyist test for self-containment (each phase fully self-contained with: (1) objective, (2) prerequisites, (3) implementation detail including settings, file paths, and error handling, (4) integration points, (5) frontend guidelines when applicable, (6) expected outcomes, (7) testing recommendations)
 </core>
 </section>
 
@@ -165,7 +166,7 @@ The canonical definitions for what these structural elements look like (sentinel
 - YAML frontmatter present and well-formed (valid `type`, `feature`, `tier: 2` fields)
 - `<sections>` index present and complete (lists all section IDs in the document)
 - `<section>` tags present with matching `id` attributes, corresponding to sentinel markers
-- Authority tags well-formed (`<mandatory>`, `<guidance>`, `<core>` only — no invented tags, matching open/close pairs)
+- Authority tags well-formed (`<mandatory>`, `<core>`, `<guidance>`, `<context>` only — no invented tags, matching open/close pairs)
 </core>
 </section>
 
